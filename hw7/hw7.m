@@ -1,0 +1,24 @@
+%% Simulate 1-D blur and noise
+image_original = im2double(imread('Cameraman256.bmp', 'bmp'));
+[H, W] = size(image_original);
+blur_impulse = fspecial('motion', 7, 0);
+image_blurred = imfilter(image_original, blur_impulse, 'conv', 'circular');
+noise_power = 1e-4;
+randn('seed', 1);
+noise = sqrt(noise_power) * randn(H, W);
+image_noisy = image_blurred + noise;
+
+figure; imshow(image_original, 'border', 'tight');
+figure; imshow(image_blurred, 'border', 'tight');
+figure; imshow(image_noisy, 'border', 'tight');
+
+%% CLS restoration
+alpha = 0.1;  % you should try different values of alpha
+image_cls_restored = cls_restoration(image_noisy, blur_impulse, alpha);
+figure; imshow(image_cls_restored, 'border', 'tight');
+
+%% computation of ISNR
+noisy_psnr = 10 * log10(1 / (norm(image_original - image_noisy, 'fro') ^ 2 / H / W));
+restored_psnr = 10 * log10(1 / (norm(image_original - image_cls_restored, 'fro') ^ 2 / H / W));
+isnr = restored_psnr - noisy_psnr;
+fprintf('\n The improvement in SNR value is %0.2f', isnr);
